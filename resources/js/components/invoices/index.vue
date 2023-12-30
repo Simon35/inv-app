@@ -2,6 +2,8 @@
 import { onMounted, ref } from 'vue';
 
 let invoices = ref([])
+let searchInvoice = ref([])
+
 onMounted(async() => {
     getInvoices()
 })
@@ -9,6 +11,12 @@ onMounted(async() => {
 const getInvoices = async () => {
     let response = await axios.get("/api/get_all_invoices")
     console.log('response', response)
+    invoices.value = response.data.invoices
+}
+
+const search = async () => {
+    let response = await axios.get('/api/search_invoices?s='+searchInvoice.value)
+    console.log('response', response.data.invoices)
     invoices.value = response.data.invoices
 }
 
@@ -57,17 +65,18 @@ const getInvoices = async () => {
                 </div>
                 <div class="relative">
                     <i class="table--search--input--icon fas fa-search "></i>
-                    <input class="table--search--input" type="text" placeholder="Search invoice">
+                    <input class="table--search--input" type="text" placeholder="Search invoice"
+                    v-model="searchInvoice" @keyup="search()">
                 </div>
             </div>
 
             <div class="table--heading">
-                <p>ID</p>
-                <p>Date</p>
-                <p>Number</p>
-                <p>Customer</p>
-                <p>Due Date</p>
-                <p>Total</p>
+                <p id="col">ID</p>
+                <p id="col">Date</p>
+                <p id="col">Number</p>
+                <p id="col">Customer</p>
+                <p id="col">Due Date</p>
+                <p id="col">Total</p>
             </div>
 
             <!-- item 1 -->
