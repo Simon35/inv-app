@@ -2,26 +2,31 @@
 import { onMounted, ref } from 'vue';
 
 let form = ref([])
+let simon = ref([])
 let allcustomers = ref([])
 let customer_id = ref([])
 let item = ref([])
 let list_cart = ref([])
 const showModal = ref(false)
 const hideModal = ref(true)
+let list_products = ref([])
 
 
 onMounted(async() => {
     indexForm()
     getAllCustomers()
+    getProducts()
 })
 
 const indexForm = async () => {
-    let form = await axios.get("/api/create_invoice")
+    let simon = await axios.get("/api/create_invoice")
+    //console.log('simon', simon)
+    form.value = simon.data
+
 }
 
 const getAllCustomers = async () => {
     let response = await axios.get("/api/customers")
-    console.log('response1', response)
     allcustomers.value = response.data.customers
 }
 
@@ -34,7 +39,14 @@ const addCart = (item) =>{
         qty: item.qty
 
     }
+    // ajoute à la liste
     list_cart.value.push(itemCart)
+    closeModal()
+}
+
+const removeItem = (i) => {
+    // retire de la liste
+    list_cart.value.splice(i, 1)
 }
 
 const openModal = () => {
@@ -43,6 +55,12 @@ const openModal = () => {
 
 const closeModal = () => {
     showModal.value = !hideModal.value
+}
+
+const getProducts = async () => {
+    let response = await axios.get("/api/products")
+    console.log('products', response)
+    list_products.value = response.data.products
 }
 
 </script>
@@ -70,7 +88,7 @@ const closeModal = () => {
                     </select>
                 </div>
                 <div>
-                    <p class="my-1">Date</p> 
+                    <p class="my-1">Date </p> 
                     <input id="date" placeholder="dd-mm-yyyy" type="date" class="input" v-model="form.date"> <!---->
                     <p class="my-1">Due Date</p> 
                     <input id="due_date" type="date" class="input" v-model="form.due_date">
@@ -97,16 +115,16 @@ const closeModal = () => {
                 <div class="table--items2" v-for="(itemCart, i) in list_cart" :key="itemCart.id">
                     <p>{{ itemCart.item_code}} {{ itemCart.description}}</p>
                     <p>
-                        <input type="text" class="input" v-omdel="itemCart.unit_price">
+                        <input type="text" class="input" v-model="itemCart.unit_price">
                     </p>
                     <p>
-                        <input type="text" class="input" v-model="item.qty">
+                        <input type="text" class="input" v-model="itemCart.qty">
                     </p>
                     <p v-if="itemCart.qty">
                         $ {{ (itemCart.qty) * (itemCart.unit_price)}}
                     </p>
                     <p v-else></p>
-                    <p style="color: red; font-size: 24px;cursor: pointer;">
+                    <p style="color: red; font-size: 24px;cursor: pointer;" @click="removeItem(i)">
                         &times;
                     </p>
                 </div>
@@ -120,7 +138,7 @@ const closeModal = () => {
             <div class="table__footer">
                 <div class="document-footer" >
                     <p>Terms and Conditions</p>
-                    <textarea cols="50" rows="7" class="textarea" ></textarea>
+                    <textarea cols="50" rows="7" class="textarea" v-model="form.terms_and_conditions"></textarea>
                 </div>
                 <div>
                     <div class="table__footer--subtotal">
@@ -160,14 +178,19 @@ const closeModal = () => {
             <h3 class="modal__title">Add Item</h3>
             <hr><br>
             <div class="modal__items">
-                <select class="input my-1">
-                    <option value="None">None</option>
-                    <option value="None">LBC Padala</option>
-                </select>
+                <ul style="list-style: none;">
+                    <li v-for="(item, i) in list_products" :key="item.id" style="display:grid; grid-template-columns: 30px 350px 15px; align-items: center; padding-bottom: 10px;">
+                        <p>{{  i+1 }}</p>
+                        <a href="#">{{ item.item_code}} >{{ item.description}}</a>
+                        <button @click="addCart(item)" style="border: 2px solid #e0e; width: 40px; height: 35px; cursor: pointer;">
+                        +</button>
+                    </li>
+
+                </ul>
             </div>
             <br><hr>
             <div class="model__footer">
-                <button class="btn btn-light mr-2 btn__close--modal">
+                <button class="btn btn-light mr-2 btn__close--modal" @click="closeModal()">
                     Cancel
                 </button>
                 <button class="btn btn-light btn__close--modal ">Save</button>
